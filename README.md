@@ -68,10 +68,10 @@
 
 
 ### angular - guide
-- TODO:
+- https://angular.io/guide/bootstrapping
 
 
 
 ### angular - api
-- TODO:
+- https://angular.io/api/forms/ReactiveFormsModule
 
