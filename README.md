@@ -74,4 +74,8 @@
 
 ### angular - api
 - https://angular.io/api/forms/ReactiveFormsModule
+- https://angular.io/api/forms/FormGroup
 
+
+### typescript
+- https://dev.to/lioness100/introducing-typescript-override-keyword-4b36
