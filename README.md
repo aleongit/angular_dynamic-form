@@ -73,9 +73,19 @@
 
 
 ### angular - api
+- https://angular.io/api/core/Input
+- https://angular.io/api/common/NgSwitch
 - https://angular.io/api/forms/ReactiveFormsModule
 - https://angular.io/api/forms/FormGroup
+- https://angular.io/api/forms/FormGroupDirective
+- https://angular.io/api/forms/FormControlName
+
 
 
 ### typescript
 - https://dev.to/lioness100/introducing-typescript-override-keyword-4b36
+- https://www.typescriptlang.org/docs/handbook/2/generics.html
+
+
+### RxJS
+- https://www.learnrxjs.io/learn-rxjs/operators/creation/of

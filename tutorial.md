@@ -141,3 +141,111 @@ export class QuestionControlService {
   }
 }
 ```
+
+
+
+## Compose dynamic form contents
+
+- The dynamic form itself is represented by a container component, which you add in a later step. Each question is represented in the form component's template by an `<app-question>` tag, which matches an instance of `DynamicFormQuestionComponent`.
+
+- The `DynamicFormQuestionComponent` is responsible for rendering the details of an individual question based on values in the data-bound question object. The form relies on a `[formGroup]` directive to connect the template HTML to the underlying control objects. The `DynamicFormQuestionComponent` creates form groups and populates them with controls defined in the question model, specifying display and validation rules.
+
+- **dynamic-form-question.component.ts**
+```ts
+import { Component, Input } from '@angular/core';
+import { FormGroup } from '@angular/forms';
+
+import { QuestionBase } from './question-base';
+
+@Component({
+  selector: 'app-question',
+  templateUrl: './dynamic-form-question.component.html'
+})
+export class DynamicFormQuestionComponent {
+  @Input() question!: QuestionBase<string>;
+  @Input() form!: FormGroup;
+  get isValid() { return this.form.controls[this.question.key].valid; }
+}
+```
+
+- **dynamic-form-question.component.html**
+```html
+<div [formGroup]="form">
+  <label [attr.for]="question.key">{{question.label}}</label>
+
+  <div [ngSwitch]="question.controlType">
+
+    <input *ngSwitchCase="'textbox'" [formControlName]="question.key"
+            [id]="question.key" [type]="question.type">
+
+    <select [id]="question.key" *ngSwitchCase="'dropdown'" [formControlName]="question.key">
+      <option *ngFor="let opt of question.options" [value]="opt.key">{{opt.value}}</option>
+    </select>
+
+  </div>
+
+  <div class="errorMessage" *ngIf="!isValid">{{question.label}} is required</div>
+</div>
+```
+
+- The goal of the `DynamicFormQuestionComponent` is to present question types defined in your model. You only have two types of questions at this point but you can imagine many more. The `ngSwitch` statement in the template determines which type of question to display. The switch uses directives with the `formControlName` and `formGroup` selectors. Both directives are defined in `ReactiveFormsModule`.
+
+
+### Supply data
+
+- Another service is needed to supply a specific set of questions from which to build an individual form. For this exercise you create the `QuestionService` to supply this array of questions from the hard-coded sample data. In a real-world app, the service might fetch data from a backend system. The key point, however, is that you control the hero job-application questions entirely through the objects returned from `QuestionService`. To maintain the questionnaire as requirements change, you only need to add, update, and remove objects from the `questions` array.
+
+- The `QuestionService` supplies a set of questions in the form of an array bound to `@Input()` questions.
+
+- **src/app/question.service.ts**
+```ts
+import { Injectable } from '@angular/core';
+
+import { DropdownQuestion } from './question-dropdown';
+import { QuestionBase } from './question-base';
+import { TextboxQuestion } from './question-textbox';
+import { of } from 'rxjs';
+
+@Injectable()
+export class QuestionService {
+
+  // TODO: get from a remote source of question metadata
+  getQuestions() {
+
+    const questions: QuestionBase<string>[] = [
+
+      new DropdownQuestion({
+        key: 'brave',
+        label: 'Bravery Rating',
+        options: [
+          {key: 'solid',  value: 'Solid'},
+          {key: 'great',  value: 'Great'},
+          {key: 'good',   value: 'Good'},
+          {key: 'unproven', value: 'Unproven'}
+        ],
+        order: 3
+      }),
+
+      new TextboxQuestion({
+        key: 'firstName',
+        label: 'First name',
+        value: 'Bombasto',
+        required: true,
+        order: 1
+      }),
+
+      new TextboxQuestion({
+        key: 'emailAddress',
+        label: 'Email',
+        type: 'email',
+        order: 2
+      })
+    ];
+
+    return of(questions.sort((a, b) => a.order - b.order));
+  }
+}
+```
+
+
+## Create a dynamic form template
