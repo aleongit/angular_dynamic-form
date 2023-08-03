@@ -249,3 +249,100 @@ export class QuestionService {
 
 
 ## Create a dynamic form template
+
+- The `DynamicFormComponent` component is the entry point and the main container for the form, which is represented using the `<app-dynamic-form>` in a template.
+
+The `DynamicFormComponent` component presents a list of questions by binding each one to an `<app-question>` element that matches the `DynamicFormQuestionComponent`.
+
+- **dynamic-form.component.ts**
+```ts
+import { Component, Input, OnInit } from '@angular/core';
+import { FormGroup } from '@angular/forms';
+
+import { QuestionBase } from './question-base';
+import { QuestionControlService } from './question-control.service';
+
+@Component({
+  selector: 'app-dynamic-form',
+  templateUrl: './dynamic-form.component.html',
+  providers: [ QuestionControlService ]
+})
+export class DynamicFormComponent implements OnInit {
+
+  @Input() questions: QuestionBase<string>[] | null = [];
+  form!: FormGroup;
+  payLoad = '';
+
+  constructor(private qcs: QuestionControlService) {}
+
+  ngOnInit() {
+    this.form = this.qcs.toFormGroup(this.questions as QuestionBase<string>[]);
+  }
+
+  onSubmit() {
+    this.payLoad = JSON.stringify(this.form.getRawValue());
+  }
+}
+```
+
+- **dynamic-form.component.html**
+```html
+<div>
+  <form (ngSubmit)="onSubmit()" [formGroup]="form">
+
+    <div *ngFor="let question of questions" class="form-row">
+      <app-question [question]="question" [form]="form"></app-question>
+    </div>
+
+    <div class="form-row">
+      <button type="submit" [disabled]="!form.valid">Save</button>
+    </div>
+  </form>
+
+  <div *ngIf="payLoad" class="form-row">
+    <strong>Saved the following values</strong><br>{{payLoad}}
+  </div>
+</div>
+```
+
+
+### Display the form
+
+- To display an instance of the dynamic form, the `AppComponent` shell template passes the questions array returned by the `QuestionService` to the form container component, `<app-dynamic-form>`
+
+- **app.component.ts**
+```ts
+import { Component } from '@angular/core';
+
+import { QuestionService } from './question.service';
+import { QuestionBase } from './question-base';
+import { Observable } from 'rxjs';
+
+@Component({
+  selector: 'app-root',
+  template: `
+    <div>
+      <h2>Job Application for Heroes</h2>
+      <app-dynamic-form [questions]="questions$ | async"></app-dynamic-form>
+    </div>
+  `,
+  providers:  [QuestionService]
+})
+export class AppComponent {
+  questions$: Observable<QuestionBase<any>[]>;
+
+  constructor(service: QuestionService) {
+    this.questions$ = service.getQuestions();
+  }
+}
+```
+
+- The example provides a model for a job application for heroes, but there are no references to any specific hero question other than the objects returned by `QuestionService`. This separation of model and data lets you repurpose the components for any type of survey, as long as it's compatible with the *question* object model.
+
+
+
+### Ensuring valid data
+
+- The form template uses dynamic data binding of metadata to render the form without making any hardcoded assumptions about specific questions. It adds both control metadata and validation criteria dynamically.
+
+- To ensure valid input, the *Save* button is disabled until the form is in a valid state. When the form is valid, click *Save* and the application renders the current form values as JSON.
